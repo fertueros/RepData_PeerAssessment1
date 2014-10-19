@@ -7,11 +7,36 @@ output:
 
 
 ## Loading and preprocessing the data
+Sorry if my english is not good. 
+Unzip the file in your working directory and load with R:
+```{r}
+library("lubridate")
+data<-read.csv("activity.csv")
+data$date<-ymd(data$date)
+
+#steps per day
+
+steps_day<-aggregate(steps~date,data,sum,na.rm=TRUE)
+
+```
+
 
 
 
 ## What is mean total number of steps taken per day?
 
+making a histogram for steps per day
+
+```{r}
+summary(steps_day$steps)
+hist(steps_day$steps, col='green', breaks=10)
+mean_step<-mean(steps_day$steps)
+median_step<-median(steps_day$steps)
+abline(v=mean_step, col='red', lwd=4) #mean of steps per day
+```
+
+* The mean of steps per day is `r format(mean_step, digits=2)`
+* The median of the steps per day is: `r format(median_step, digits=2)`
 
 
 ## What is the average daily activity pattern?
