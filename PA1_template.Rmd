@@ -1,8 +1,8 @@
 ---
-title: "Reproducible Research: Peer Assessment 1"
-output: 
+title: 'Reproducible Research: Peer Assessment 1'
+output:
   html_document:
-    keep_md: true
+    keep_md: yes
 ---
 
 
@@ -11,16 +11,15 @@ Sorry if my english is not good.
 Unzip the file in your working directory and load with R:
 ```{r}
 library("lubridate")
+library("ggplot2")
+suppressMessages(library("dplyr"))
+library("tidyr")
 data<-read.csv("activity.csv")
 data$date<-ymd(data$date)
-
-#steps per day
 
 steps_day<-aggregate(steps~date,data,sum,na.rm=TRUE)
 
 ```
-
-
 
 
 ## What is mean total number of steps taken per day?
@@ -29,22 +28,104 @@ making a histogram for steps per day
 
 ```{r}
 summary(steps_day$steps)
-hist(steps_day$steps, col='green', breaks=10)
+rango<-diff(range(steps_day$steps))
 mean_step<-mean(steps_day$steps)
 median_step<-median(steps_day$steps)
-abline(v=mean_step, col='red', lwd=4) #mean of steps per day
+
+ggplot(steps_day, aes(x=steps), fill="green")+ geom_histogram(binwidth=rango/15, fill="green", colour="black")+theme_bw()+geom_vline(xintercept=mean_step, colour="red", size=1)+ggtitle("Steps per Day")
+
 ```
 
-* The mean of steps per day is `r format(mean_step, digits=2)`
-* The median of the steps per day is: `r format(median_step, digits=2)`
+- The mean of steps per day is **`r format(mean_step, digits=2)`**
+- The median of the steps per day is: **`r format(median_step, digits=2)`**
 
 
 ## What is the average daily activity pattern?
 
+  We need agrupapate the data by interval and generate the line plot
+  
+  
+```{r}
+steps_interval<-aggregate(steps~interval,data,mean,na.rm=TRUE)
 
+ggplot(steps_interval, aes(x = interval, y = steps)) + geom_line(color = "blue")+ theme_bw()+ ggtitle("Average number of steps by interval")
+
+interval_of_maxsteps<-steps_interval[which.max(steps_interval$steps), ]$interval
+```
+
+  The interval where the mean of steps is max: **`r interval_of_maxsteps`**
 
 ## Imputing missing values
 
+  We replace the NA values for the mean (easy way for imputing values)
+  
+```{r}
+count_missing<-sum(is.na(data))
+```
 
+  There are **`r count_missing`** missing values.
+  
+  
+```{r}
+imput_data<-data
 
+for (i in 1:nrow(data)) {
+    if (is.na(data$steps[i])) {
+        imput_data$steps[i] = steps_interval[steps_interval$interval == data$interval[i],]$steps
+    }
+}
+
+```
+
+  Compare de imput data y the original data
+  
+```{r}
+head(data)#original data
+head(imput_data) #data with mean of steps by interval
+imput_steps_day<-aggregate(steps~date,imput_data,sum)
+```
+
+  Lets calculate de mean, median and do the histogram
+  
+```{r}
+
+imput_rango<-diff(range(imput_steps_day$steps))
+mean_imput_step<-mean(imput_steps_day$steps)
+median_imput_step<-median(imput_steps_day$steps)
+
+ggplot(imput_steps_day, aes(x=steps), fill="green")+ geom_histogram(binwidth=imput_rango/15, fill="green", colour="black")+theme_bw()+geom_vline(xintercept=mean_imput_step, colour="red", size=1)+ggtitle("Steps per Day in the imput data")
+```
+
+- The mean of steps per day is **`r format(mean_imput_step, digits=2)`**
+- The median of the steps per day is: **`r format(median_imput_step, digits=2)`**
+
+  The median now is much clouser to the mean.
+  
+```{r}
+imput_interval_of_maxsteps<-imput_data[imput_data$steps == max(imput_data$steps), ]$interval
+```
+
+ and the interval with thw max number of steps is **`r imput_interval_of_maxsteps`**
+   
 ## Are there differences in activity patterns between weekdays and weekends?
+
+  Firts, we need to create a varible "dia", that contain if the date is a weekend or weekday. 
+
+```{r}
+# LC_TIME="Spanish_Spain.1252" (Sys.getlocale("LC_TIME"))
+# In my region Weekdays are Lunes, Martes, Miercoles, Jueves y Viernes and
+# weekends are Sabado y Domingo
+
+
+imput_data$dia<-ifelse(weekdays(imput_data$date)=="domingo" |weekdays(imput_data$date)=="sábado",c("weekend"),c("weekday"))
+
+imput_data$dia<-as.factor(imput_data$dia)
+```
+  
+  Now, plot the line graph for weekdays and weekends
+  
+```{r}
+library(lattice)
+imput_steps_dia <- aggregate(steps ~ interval + dia, imput_data, mean)
+xyplot(steps ~ interval | dia, data = imput_steps_dia, layout = c(1, 2), type = "l")
+```
