@@ -9,8 +9,15 @@ Unzip the file in your working directory and load with R:
 library("lubridate")
 library("ggplot2")
 suppressMessages(library("dplyr"))
+```
+
+```
+## Warning: package 'dplyr' was built under R version 3.1.3
+```
+
+```r
 library("tidyr")
-data<-read.csv("activity.csv")
+data<-read.csv("activity.csv")#read the data
 data$date<-ymd(data$date)
 
 steps_day<-aggregate(steps~date,data,sum,na.rm=TRUE)

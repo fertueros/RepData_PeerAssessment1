@@ -14,7 +14,7 @@ library("lubridate")
 library("ggplot2")
 suppressMessages(library("dplyr"))
 library("tidyr")
-data<-read.csv("activity.csv")
+data<-read.csv("activity.csv")#read the data
 data$date<-ymd(data$date)
 
 steps_day<-aggregate(steps~date,data,sum,na.rm=TRUE)
