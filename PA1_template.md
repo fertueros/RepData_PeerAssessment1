@@ -2,7 +2,7 @@
 
 
 ## Loading and preprocessing the data
-Sorry if my english is not good. 
+Sorry if my english is not good.
 Unzip the file in your working directory and load with R:
 
 ```r
